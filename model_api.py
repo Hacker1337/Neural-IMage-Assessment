@@ -13,22 +13,16 @@ model = None
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_model(path="."):
+    global model
     MODEL_PATH = os.path.join(path, "pretrained_model/epoch-82.pth")
 
     base_model = models.vgg16(pretrained=True)
     model = NIMA(base_model)
 
-    try:
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-    except:
-        raise
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 
 seed = 42
 torch.manual_seed(seed)
-
-model = model.to(device)
-
-model.eval()
 
 test_transform = transforms.Compose([
     transforms.Resize(256),

@@ -9,7 +9,6 @@ NIMA is released under the MIT license. See LICENSE for the fill license text.
 import argparse
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 from PIL import Image
 import pandas as pd
 from tqdm import tqdm
@@ -29,9 +28,10 @@ args = parser.parse_args()
 
 base_model = models.vgg16(pretrained=True)
 model = NIMA(base_model)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 try:
-    model.load_state_dict(torch.load(args.model))
+    model.load_state_dict(torch.load(args.model, map_location=device))
     print('successfully loaded model')
 except:
     raise
@@ -39,17 +39,16 @@ except:
 seed = 42
 torch.manual_seed(seed)
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = model.to(device)
 
 model.eval()
 
 test_transform = transforms.Compose([
-    transforms.Scale(256), 
-    transforms.RandomCrop(224), 
-    transforms.ToTensor(), 
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], 
+    transforms.Resize(256),
+    transforms.RandomCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225])
     ])
 
@@ -76,7 +75,6 @@ for i, img in enumerate(test_imgs):
     gt_mean = 0.0
     for l, e in enumerate(gt, 1):
         gt_mean += l * e
-    # print(str(img) + ' mean: %.3f | std: %.3f | GT: %.3f' % (mean, std, gt_mean))
     if not os.path.exists(args.predictions):
         os.makedirs(args.predictions)
     with open(os.path.join(args.predictions, 'pred.txt'), 'a') as f:
